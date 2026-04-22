@@ -105,15 +105,6 @@ sudo rmmod monitor
 make -C boilerplate clean
 ```
 
-### Automated Test
-
-A full end-to-end test script is included:
-
-```bash
-sudo bash test.sh
-```
----
-
 ## Engineering Analysis
 
 ### 1. Isolation Mechanisms

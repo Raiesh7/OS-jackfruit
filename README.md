@@ -57,39 +57,39 @@ dmesg | tail -n 5
 ### 4. Start Supervisor (Terminal 1)
 
 ```bash
-sudo ./boilerplate/engine supervisor ./rootfs-base
+sudo ./engine supervisor ./rootfs-base
 ```
 
 ### 5. Use the CLI (Terminal 2)
 
 ```bash
 # Start two containers
-sudo ./boilerplate/engine start alpha ./rootfs-alpha "/cpu_hog 30"
-sudo ./boilerplate/engine start beta  ./rootfs-beta  "/cpu_hog 30"
+sudo ./engine start alpha ./rootfs-alpha "/cpu_hog 30"
+sudo ./engine start beta  ./rootfs-beta  "/cpu_hog 30"
 
 # List all containers
-sudo ./boilerplate/engine ps
+sudo ./engine ps
 
 # View logs
-sudo ./boilerplate/engine logs alpha
+sudo ./engine logs alpha
 
 # Run foreground container (blocks until exit)
 cp -a rootfs-base rootfs-gamma
-sudo ./boilerplate/engine run gamma ./rootfs-gamma "/cpu_hog 5"
+sudo ./engine run gamma ./rootfs-gamma "/cpu_hog 5"
 
 # Memory limit test
 cp -a rootfs-base rootfs-mem1
-sudo ./boilerplate/engine run mem1 ./rootfs-mem1 "/memory_hog 4 1000" --soft-mib 8 --hard-mib 24
+sudo ./engine run mem1 ./rootfs-mem1 "/memory_hog 4 1000" --soft-mib 8 --hard-mib 24
 
 # Scheduler experiment
 cp -a rootfs-base rootfs-cpu1
 cp -a rootfs-base rootfs-cpu2
-sudo ./boilerplate/engine start cpu1 ./rootfs-cpu1 "/cpu_hog 15" --nice 0
-sudo ./boilerplate/engine start cpu2 ./rootfs-cpu2 "/cpu_hog 15" --nice 10
+sudo ./engine start cpu1 ./rootfs-cpu1 "/cpu_hog 15" --nice 0
+sudo ./engine start cpu2 ./rootfs-cpu2 "/cpu_hog 15" --nice 10
 
 # Stop containers
-sudo ./boilerplate/engine stop alpha
-sudo ./boilerplate/engine stop beta
+sudo ./engine stop alpha
+sudo ./engine stop beta
 ```
 
 ### 6. Inspect Kernel Logs
@@ -162,8 +162,6 @@ Container metadata (the linked list of records) is protected by a separate `pthr
 ### 5. Scheduling Behavior
 
 Linux uses the Completely Fair Scheduler (CFS), which assigns each process a weight based on its nice value. The weight formula is approximately `1024 / (1.25^nice)`. A process at nice=0 has weight 1024; at nice=10, weight ~110. CFS tracks a virtual runtime (`vruntime`) that advances faster for lower-weight processes, meaning higher-nice processes get scheduled less frequently.
-
-In our experiment, `cpu1` (nice=0) and `cpu2` (nice=10) both ran for 15 real seconds because `cpu_hog` measures wall-clock time with `time()` and exits after the duration regardless of how much CPU it received. On a single-vCPU QEMU host the two processes time-slice sequentially, so both complete in 15 seconds. The difference in scheduling weight means `cpu1` receives approximately 9× more CPU time per scheduling period than `cpu2` — this would manifest as higher iteration throughput if the workload measured work done rather than time elapsed. On a multi-core host with CPU pressure from other workloads, the priority difference produces visible completion time differences.
 
 ---
 
